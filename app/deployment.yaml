@@ -15,9 +15,15 @@ spec:
     spec:
       containers:
         - name: gitops-app
-          image: nginx:latest        # we'll replace this with your built image later
+          image: registry.access.redhat.com/ubi8/nginx-120:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: html
+              mountPath: /usr/share/nginx/html
           resources:
             requests:
               memory: "64Mi"
@@ -25,3 +31,25 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "100m"
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: html
+          configMap:
+            name: app-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-html
+  namespace: gitops-poc
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <h1>GitOps POC 🚀</h1>
+        <p>Deployed via ArgoCD + Tekton</p>
+      </body>
+    </html>
